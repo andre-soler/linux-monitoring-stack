@@ -42,9 +42,21 @@ local total_kb available_kb available_pct total_mb available_mb status
 
 }
 
+check_disk() {
+  local used_pct status
+
+  used_pct=$(df --output=pcent / | tail -n 1 | tr -d ' %')
+
+  if (( used_pct >= 85 )); then
+    status="ATENÇÃO"
+  else
+    status="OK"
+  fi
+
+  echo "Disco /: ${used_pct}% usado — $status"
+}
+
 check_cpu
-check_memory   
-
-
-
+check_memory
+check_disk
 
