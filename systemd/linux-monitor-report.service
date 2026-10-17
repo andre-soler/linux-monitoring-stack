@@ -4,4 +4,4 @@ Description=Relatório de monitoramento do sistema
 [Service]
 Type=oneshot
 User=andre-soler
-ExecStart=/home/andre-soler/linux-monitoring-stack/scripts/report.sh
+ExecStart=/home/andre-soler/linux-monitoring-stack/scripts/send-report.sh
