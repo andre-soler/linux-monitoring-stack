@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+IGNORE_FILE="$SCRIPT_DIR/../config/ignore-patterns.txt"
+
 echo "Relatório do sistema — $(date '+%d/%m/%Y %H:%M')"
 
 check_cpu() {
@@ -72,7 +75,42 @@ check_services() {
   fi
 }
 
+check_logs() {
+  local errors count status
+
+  errors=$(journalctl -p err --since "24 hours ago" --no-pager -q \
+    | grep -v -F -f "$IGNORE_FILE" || true)
+  count=$(echo -n "$errors" | grep -c '^' || true)
+
+  if (( count > 0 )); then
+    status="ATENÇÃO"
+    echo "Erros nos logs (24h): $count — $status"
+    echo "$errors" | tail -n 5 | sed 's/^/  - /'
+  else
+    status="OK"
+    echo "Erros nos logs (24h): nenhum — $status"
+  fi
+}
+
+check_updates() {
+  local upgradable total security status
+
+  upgradable=$(apt list --upgradable 2>/dev/null | grep -v '^Listing' || true)
+  total=$(echo -n "$upgradable" | grep -c '^' || true)
+  security=$(echo -n "$upgradable" | grep -c -- '-security' || true)
+
+  if (( total > 0 )); then
+    status="ATENÇÃO"
+    echo "Atualizações pendentes: $total ($security de segurança) — $status"
+  else
+    status="OK"
+    echo "Atualizações pendentes: nenhuma — $status"
+  fi
+}
+
 check_cpu
 check_memory
 check_disk
 check_services
+check_logs
+check_updates
