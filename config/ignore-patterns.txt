@@ -4,3 +4,8 @@ dxgkio_
 virtiofs: Unknown parameter
 Can't open blockdev
 getaddrinfo() failed
+LxGnsMessagePortListenerRelayStop
+Broken pipe @C:/__w/
+Failed to start the guest side of the localhost relay
+Failed unmounting init.mount
+Failed unmounting tmp-.X11
