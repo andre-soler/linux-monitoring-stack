@@ -30,8 +30,28 @@ services:
       - monitoring
     mem_limit: 512m
 
+  grafana:
+    image: grafana/grafana:13.2.4
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+    mem_limit: 256m
+
 volumes:
   prometheus-data:
+  grafana-data:
 
 networks:
   monitoring:
+
