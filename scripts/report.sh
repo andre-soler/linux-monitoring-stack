@@ -4,6 +4,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 IGNORE_FILE="$SCRIPT_DIR/../config/ignore-patterns.txt"
+CONFIG_FILE="$SCRIPT_DIR/../config/report.conf"
+source "$CONFIG_FILE"
 
 echo "Relatório do sistema — $(date '+%d/%m/%Y %H:%M')"
 
@@ -35,7 +37,7 @@ local total_kb available_kb available_pct total_mb available_mb status
   total_mb=$(( total_kb / 1024 ))
   available_mb=$(( available_kb / 1024 ))
 
-  if (( available_pct < 15 )); then
+  if (( available_pct < MEMORY_MIN_AVAILABLE_PCT )); then
     status="ATENÇÃO"
   else
     status="OK"
@@ -50,7 +52,7 @@ check_disk() {
 
   used_pct=$(df --output=pcent / | tail -n 1 | tr -d ' %')
 
-  if (( used_pct >= 85 )); then
+  if (( used_pct >= DISK_MAX_USED_PCT )); then
     status="ATENÇÃO"
   else
     status="OK"
@@ -78,14 +80,14 @@ check_services() {
 check_logs() {
   local errors count status
 
-  errors=$(journalctl -p err --since "24 hours ago" --no-pager -q \
+  errors=$(journalctl -p err --since "$LOG_SINCE" --no-pager -q \
     | grep -v -F -f "$IGNORE_FILE" || true)
   count=$(echo -n "$errors" | grep -c '^' || true)
 
   if (( count > 0 )); then
     status="ATENÇÃO"
     echo "Erros nos logs (24h): $count — $status"
-    echo "$errors" | tail -n 5 | sed 's/^/  - /'
+    echo "$errors" | tail -n "$LOG_MAX_LINES" | sed 's/^/  - /'
   else
     status="OK"
     echo "Erros nos logs (24h): nenhum — $status"
