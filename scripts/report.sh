@@ -56,7 +56,23 @@ check_disk() {
   echo "Disco /: ${used_pct}% usado — $status"
 }
 
+check_services() {
+  local failed count status
+
+  failed=$(systemctl --failed --no-legend --plain | awk '{print $1}')
+  count=$(echo -n "$failed" | grep -c '^' || true)
+
+  if (( count > 0 )); then
+    status="ATENÇÃO"
+    echo "Serviços com falha: $count — $status"
+    echo "$failed" | sed 's/^/  - /'
+  else
+    status="OK"
+    echo "Serviços com falha: nenhum — $status"
+  fi
+}
+
 check_cpu
 check_memory
 check_disk
-
+check_services
