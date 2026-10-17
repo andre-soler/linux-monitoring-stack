@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-
+# shellcheck source-path=SCRIPTDIR
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 IGNORE_FILE="$SCRIPT_DIR/../config/ignore-patterns.txt"
 CONFIG_FILE="$SCRIPT_DIR/../config/report.conf"
+# shellcheck source=../config/report.conf
 source "$CONFIG_FILE"
 
 echo "Relatório do sistema — $(date '+%d/%m/%Y %H:%M')"
@@ -16,9 +17,9 @@ cores=$(nproc)
 load=$(cut -d ' ' -f1 /proc/loadavg)
 load_int=${load%.*}
 
-if ((load_int >= cores)); then
- status = "ATENÇÃO"
-else
+if (( load_int >= cores )); then
+    status="ATENÇÃO"
+  else
     status="OK"
   fi
 
