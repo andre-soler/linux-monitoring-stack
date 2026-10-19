@@ -48,10 +48,46 @@ services:
     depends_on:
       - prometheus
     mem_limit: 256m
+ 
+  loki:
+    image: grafana/loki:3.7.8
+    container_name: loki
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3100:3100"
+    volumes:
+      - loki-data:/loki
+    command:
+      - -config.file=/etc/loki/local-config.yaml
+    networks:
+      - monitoring
+    mem_limit: 256m
+
+  alloy:
+    image: grafana/alloy:v1.21.0
+    container_name: alloy
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:12345:12345"
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/log/journal:/var/log/journal:ro
+      - /etc/machine-id:/etc/machine-id:ro
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --storage.path=/var/lib/alloy/data
+      - --server.http.listen-addr=0.0.0.0:12345
+    networks:
+      - monitoring
+    depends_on:
+      - loki
+    mem_limit: 256m
 
 volumes:
   prometheus-data:
   grafana-data:
+  loki-data:
 
 networks:
   monitoring:
