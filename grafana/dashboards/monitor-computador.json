@@ -5,8 +5,8 @@
     "name": "adjt7f6",
     "namespace": "default",
     "uid": "0b60df7d-28d9-4f0c-b4cb-0460896efed5",
-    "resourceVersion": "1792261411589004",
-    "generation": 1,
+    "resourceVersion": "1792435363357007",
+    "generation": 2,
     "creationTimestamp": "2026-10-17T18:23:31Z",
     "labels": {
       "grafana.app/deprecatedInternalID": "3838892520214528"
@@ -15,9 +15,11 @@
       "grafana.app/createdBy": "access-policy:service",
       "grafana.app/managedBy": "classic-file-provisioning",
       "grafana.app/managerId": "default",
-      "grafana.app/sourceChecksum": "bfe65a7d43a8031367ee956b8e34ec4e",
+      "grafana.app/sourceChecksum": "5cb39bfe74c487ad862bbe65953e6783",
       "grafana.app/sourcePath": "/etc/grafana/dashboards/monitor-computador.json",
-      "grafana.app/sourceTimestamp": "1792261173000",
+      "grafana.app/sourceTimestamp": "1792435358000",
+      "grafana.app/updatedBy": "access-policy:service",
+      "grafana.app/updatedTimestamp": "2026-10-19T18:42:43Z",
       "grafana.app/folder": ""
     }
   },
@@ -624,6 +626,70 @@
             "version": "13.2.4"
           }
         }
+      },
+      "panel-6": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "loki"
+                      },
+                      "group": "loki",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "direction": "backward",
+                        "editorMode": "code",
+                        "expr": "{job=\"systemd-journal\", level=~\"emerg|alert|crit|error\"} != \"No config space access function found\" != \"dxgkio_\" != \"getaddrinfo() failed\" != \"virtiofs\" != \"Can't open blockdev\" != \"ld.wsl.conf\"",
+                        "queryType": "range"
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "",
+          "id": 6,
+          "links": [],
+          "title": "Logs de erro",
+          "vizConfig": {
+            "group": "logs",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+              },
+              "options": {
+                "dedupStrategy": "none",
+                "enableInfiniteScrolling": false,
+                "enableLogDetails": true,
+                "prettifyLogMessage": true,
+                "showControls": false,
+                "showFieldSelector": false,
+                "showLevel": true,
+                "showTime": false,
+                "sortOrder": "Descending",
+                "timestampResolution": "ms",
+                "unwrappedColumns": false,
+                "wrapLogMessage": false
+              }
+            },
+            "version": "13.2.4"
+          }
+        }
       }
     },
     "layout": {
@@ -689,9 +755,22 @@
                 "kind": "ElementReference",
                 "name": "panel-5"
               },
-              "height": 8,
-              "width": 12,
-              "x": 0,
+              "height": 7,
+              "width": 8,
+              "x": 2,
+              "y": 12
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-6"
+              },
+              "height": 7,
+              "width": 14,
+              "x": 10,
               "y": 12
             }
           }
