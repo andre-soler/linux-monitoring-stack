@@ -57,6 +57,7 @@ services:
       - "127.0.0.1:3100:3100"
     volumes:
       - loki-data:/loki
+      - ./loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
     command:
       - -config.file=/etc/loki/local-config.yaml
     networks:
