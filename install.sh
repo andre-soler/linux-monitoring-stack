@@ -69,12 +69,72 @@ validate_configs() {
   ok "Configurações válidas"
 }
 
+install_systemd() {
+  local template="$PROJECT_DIR/systemd/linux-monitor-report.service.template"
+  local tmp
+
+  info "Instalando o service e o timer do systemd..."
+
+  tmp="$(mktemp)"
+  sed -e "s|@USER@|$RUN_USER|g" -e "s|@PROJECT_DIR@|$PROJECT_DIR|g" "$template" > "$tmp"
+
+  sudo install -m 644 "$tmp" /etc/systemd/system/linux-monitor-report.service
+  sudo install -m 644 "$PROJECT_DIR/systemd/linux-monitor-report.timer" /etc/systemd/system/
+  rm -f "$tmp"
+
+  sudo systemd-analyze verify /etc/systemd/system/linux-monitor-report.service \
+    || fail "O service gerado é inválido"
+
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now linux-monitor-report.timer > /dev/null 2>&1
+
+  ok "Service e timer instalados"
+}
+
+start_stack() {
+  info "Subindo a stack de monitoramento..."
+  docker compose --project-directory "$PROJECT_DIR" up -d
+  ok "Containers iniciados"
+}
+
+wait_for() {
+  local name="$1"
+  local url="$2"
+
+  for _ in $(seq 1 30); do
+    if curl -sf "$url" > /dev/null; then
+      ok "$name respondendo"
+      return 0
+    fi
+    sleep 2
+  done
+
+  fail "$name não respondeu em 60 segundos ($url)"
+}
+
+check_health() {
+  info "Verificando a saúde dos serviços..."
+  wait_for "node_exporter" "http://localhost:9100/metrics"
+  wait_for "Prometheus" "http://localhost:9090/-/ready"
+  wait_for "Loki" "http://localhost:3100/ready"
+  wait_for "Alloy" "http://localhost:12345/-/ready"
+  wait_for "Grafana" "http://localhost:3000/api/health"
+}
+
 main() {
   info "Instalando o linux-monitoring-stack em $PROJECT_DIR (usuário: $RUN_USER)"
   check_prerequisites
   prepare_env
   check_msmtp
   validate_configs
+  install_systemd
+  start_stack
+  check_health
+
+  echo
+  ok "Instalação concluída!"
+  info "Grafana:    http://localhost:3000"
+  info "Prometheus: http://localhost:9090"
 }
 
 main "$@"
