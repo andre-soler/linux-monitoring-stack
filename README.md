@@ -184,4 +184,10 @@ This project was developed on Ubuntu under WSL2, which has some quirks worth doc
 
 ## Next steps
 
-- Deploy the stack to
+- Deploy the stack to a real Linux server.
+- Provision that server with Ansible.
+- Back up and restore the Prometheus, Loki and Grafana volumes.
+
+## License
+
+[MIT](LICENSE)
