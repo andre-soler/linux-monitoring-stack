@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Validar scripts
-        run: shellcheck -x scripts/*.sh
+        run: shellcheck -x install.sh scripts/*.sh
 
   configs:
     name: Configurações
