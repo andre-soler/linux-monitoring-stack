@@ -71,6 +71,7 @@ check_services() {
   if (( count > 0 )); then
     status="ATENÇÃO"
     echo "Serviços com falha: $count — $status"
+# shellcheck disable=SC2001  # sed é mais legível para prefixar cada linha da lista
     echo "$failed" | sed 's/^/  - /'
   else
     status="OK"
