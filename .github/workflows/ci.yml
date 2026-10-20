@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validar scripts
+        run: shellcheck -x scripts/*.sh
+
+  configs:
+    name: Configurações
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validar docker-compose.yml
+        run: |
+          cp .env.example .env
+          docker compose config --quiet
+
+      - name: Validar prometheus.yml
+        run: |
+          docker run --rm -v ./prometheus:/cfg --entrypoint promtool \
+            prom/prometheus:v3.15.0 check config /cfg/prometheus.yml
