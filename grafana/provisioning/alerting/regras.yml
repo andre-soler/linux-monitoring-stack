@@ -1,0 +1,278 @@
+apiVersion: 1
+groups:
+    - orgId: 1
+      name: sistema
+      folder: Monitor
+      interval: 1m
+      rules:
+        - uid: cg1q9fxu9s9hca
+          title: Disco cheio
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: prometheus
+              model:
+                editorMode: code
+                expr: "  100 * (node_filesystem_size_bytes{mountpoint=\"/\"} - node_filesystem_free_bytes{mountpoint=\"/\"})\r\n   / (node_filesystem_size_bytes{mountpoint=\"/\"} - node_filesystem_free_bytes{mountpoint=\"/\"} + node_filesystem_avail_bytes{mountpoint=\"/\"})"
+                instant: true
+                intervalMs: 1000
+                legendFormat: __auto
+                maxDataPoints: 43200
+                range: false
+                refId: A
+            - refId: C
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 85
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: NoData
+          execErrState: Error
+          for: 1m
+          annotations:
+            description: O uso da partição / passou de 85%. Verifique os arquivos grandes com du -sh e limpe o que não for necessário.
+            summary: Disco / acima de 85%
+          isPaused: false
+          notification_settings:
+            receiver: email-andre
+        - uid: cg1q9uzyagxkwf
+          title: Memória baixa
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: prometheus
+              model:
+                editorMode: code
+                expr: '  100 * node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes'
+                instant: true
+                intervalMs: 1000
+                legendFormat: __auto
+                maxDataPoints: 43200
+                range: false
+                refId: A
+            - refId: C
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 15
+                        type: lt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: NoData
+          execErrState: Error
+          for: 5m
+          annotations:
+            description: Menos de 15% da memória está disponível. Verifique os processos com maior consumo usando top (tecla M) ou docker stats.
+            summary: Memória disponível abaixo de 15%
+          isPaused: false
+          notification_settings:
+            receiver: email-andre
+        - uid: cg1r2zk973g8we
+          title: Monitoramento parado
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: prometheus
+              model:
+                editorMode: code
+                expr: ' up{job="node"}'
+                instant: true
+                intervalMs: 1000
+                legendFormat: __auto
+                maxDataPoints: 43200
+                range: false
+                refId: A
+            - refId: C
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 1
+                        type: lt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: Alerting
+          execErrState: Alerting
+          for: 5m
+          annotations:
+            description: O Prometheus não consegue coletar as métricas da máquina. Verifique os containers com docker compose ps
+            summary: node_exporter não está respondendo
+          isPaused: false
+          notification_settings:
+            receiver: email-andre
+        - uid: dg1r35emxq77ka
+          title: Erros nos logs
+          condition: C
+          data:
+            - refId: A
+              queryType: instant
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: loki
+              model:
+                datasource:
+                    type: loki
+                    uid: loki
+                editorMode: code
+                expr: ' sum(count_over_time({job="systemd-journal", level=~"emerg|alert|crit|error"} != "No config space access function found" != "dxgkio_" != "getaddrinfo() failed" != "virtiofs" != "Can''t open blockdev" != "ld.wsl.conf" != "LxGnsMessagePortListenerRelayStop" != "Broken pipe @C:/__w/" != "Failed to start the guest side of the localhost relay" != "Failed unmounting init.mount" != "Failed unmounting tmp-.X11" [5m])) or vector(0)'
+                hide: false
+                instant: true
+                intervalMs: 1000
+                maxDataPoints: 43200
+                queryType: instant
+                refId: A
+            - refId: C
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: NoData
+          execErrState: Error
+          annotations:
+            description: Um erro que não é ruído conhecido apareceu no journal. Veja o painel Logs de erro no dashboard ou rode journalctl -p err -b.
+            summary: Erro nos logs do sistema
+          isPaused: false
+          notification_settings:
+            receiver: email-andre
+        - uid: fg1r39ymtqkn4e
+          title: Serviço com falha
+          condition: C
+          data:
+            - refId: A
+              queryType: instant
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: loki
+              model:
+                datasource:
+                    type: loki
+                    uid: loki
+                editorMode: code
+                expr: '  sum(count_over_time({job="systemd-journal"} |= "Failed with result" [5m])) or vector(0)'
+                hide: false
+                instant: true
+                intervalMs: 1000
+                maxDataPoints: 43200
+                queryType: instant
+                refId: A
+            - refId: C
+              queryType: expression
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: NoData
+          execErrState: Error
+          annotations:
+            description: Um serviço falhou. Identifique qual com systemctl --failed e veja o motivo com journalctl -u nome-do-serviço.
+            summary: Um serviço do systemd falhou
+          isPaused: false
+          notification_settings:
+            receiver: email-andre
